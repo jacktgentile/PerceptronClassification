@@ -93,22 +93,22 @@ if __name__ == '__main__':
     num_class = len(np.unique(y_train))
     feature_dim = len(x_train[0])
     num_value = 256
-    NB = NaiveBayes(num_class,feature_dim,num_value)
-    # Train model.
-    NB.train(x_train,y_train)
-    # Feature likelihood for high intensity pixels.
-    feature_likelihoods = NB.intensity_feature_likelihoods(NB.likelihood)
-    # Visualize the feature likelihoods for high intensity pixels.
+    # NB = NaiveBayes(num_class,feature_dim,num_value)
+    # # Train model.
+    # NB.train(x_train,y_train)
+    # # Feature likelihood for high intensity pixels.
+    # feature_likelihoods = NB.intensity_feature_likelihoods(NB.likelihood)
+    # # Visualize the feature likelihoods for high intensity pixels.
     class_names = np.array(["T-shirt/top","Trouser","Pullover","Dress",
         "Coat","Sandal","Shirt","Sneaker","Bag","Ankle boot"])
-    plot_visualization(feature_likelihoods, class_names, "Greys")
-    # Classify the test sets.
-    accuracy, y_pred = NB.test(x_test,y_test)
-    # Plot confusion matrix.
-    print(accuracy)
-    plot_confusion_matrix(y_test, y_pred, classes=class_names, normalize=True,
-                      title='Confusion matrix, with normalization')
-    plt.show()
+    # plot_visualization(feature_likelihoods, class_names, "Greys")
+    # # Classify the test sets.
+    # accuracy, y_pred = NB.test(x_test,y_test)
+    # # Plot confusion matrix.
+    # print(accuracy)
+    # plot_confusion_matrix(y_test, y_pred, classes=class_names, normalize=True,
+    #                   title='Confusion matrix, with normalization')
+    # plt.show()
 
 
     # Initialize perceptron model.
