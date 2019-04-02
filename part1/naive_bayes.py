@@ -1,4 +1,16 @@
 import numpy as np
+import matplotlib.pyplot as plt
+
+def plot_visualization(images, classes, cmap):
+    """Plot the visualizations
+    """
+    fig, ax = plt.subplots(2, 5, figsize=(12, 5))
+    for i in range(10):
+        ax[i%2, i//2].imshow(images[:, i].reshape((28, 28)), cmap=cmap)
+        ax[i%2, i//2].set_xticks([])
+        ax[i%2, i//2].set_yticks([])
+        ax[i%2, i//2].set_title(classes[i])
+    plt.show()
 
 class NaiveBayes(object):
 	def __init__(self,num_class,feature_dim,num_value):
@@ -70,6 +82,8 @@ class NaiveBayes(object):
 			pred_label(numpy.ndarray): predicted labels with a dimension of (# of examples, )
 		"""
 		pred_label = np.zeros((len(test_set)))
+		highest_probs = np.zeros((self.num_class, 2))
+		lowest_probs = np.zeros((self.num_class, 2))
 		for i in range(len(test_set)):
 			cur_img = test_set[i]
 			prob_arr = np.log(self.prior)
@@ -81,6 +95,24 @@ class NaiveBayes(object):
 				if prob_arr[j] > prob_arr[maxdex]:
 					maxdex = j
 			pred_label[i] = maxdex
+			# find indices of highest and lowest posterior probabilities
+			if pred_label[i] == test_label[i]:
+				if highest_probs[maxdex][1] == 0 or prob_arr[maxdex] > highest_probs[maxdex][1]:
+					highest_probs[maxdex][1] = prob_arr[maxdex]
+					highest_probs[maxdex][0] = i
+				elif lowest_probs[maxdex][1] == 0 or prob_arr[maxdex] < lowest_probs[maxdex][1]:
+					lowest_probs[maxdex][1] = prob_arr[maxdex]
+					lowest_probs[maxdex][0] = i
+        # display images with highest and lowest posterior probability
+		class_names = np.array(["T-shirt/top","Trouser","Pullover","Dress",
+	        "Coat","Sandal","Shirt","Sneaker","Bag","Ankle boot"])
+		best_imgs = np.zeros((self.feature_dim, self.num_class))
+		worst_imgs = np.zeros((self.feature_dim, self.num_class))
+		for i in range(self.num_class):
+			best_imgs[:,i] = test_set[highest_probs[i][0]]
+			worst_imgs[:,i] = test_set[lowest_probs[i][0]]
+		# plot_visualization(best_imgs, class_names, "Greys")
+		# plot_visualization(worst_imgs, class_names, "Greys")
 
 		accurate_count = 0.0
 		for i in range(len(pred_label)):
