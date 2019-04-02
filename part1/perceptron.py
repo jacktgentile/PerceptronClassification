@@ -1,5 +1,13 @@
 import numpy as np
 
+
+def extend_array(curr_arr, end_term):
+	aug_arr = np.zeros((curr_arr.shape[0] + 1))
+	aug_arr[:-1] = curr_arr
+	aug_arr[curr_arr.shape[0]] = end_term
+
+	return aug_arr
+
 class MultiClassPerceptron(object):
 	def __init__(self,num_class,feature_dim):
 		"""Initialize a multi class perceptron model.
@@ -16,10 +24,17 @@ class MultiClassPerceptron(object):
 		    num_class(int): number of classes to classify
 		    feature_dim(int): feature dimension for each example
 		"""
+		bias = 1
+		self.w = np.zeros((feature_dim+1,num_class))
+		self.w[self.w.shape[0] - 1] = bias
 
-		self.w = np.full((feature_dim+1,num_class), 0)
-		# for c in range(num_class):
-		# 	self.w[feature_dim][c] = 1.0
+
+	def classify(self, feats):
+		feats_aug = extend_array(feats, 1)
+
+		scores = self.w.T @ feats_aug
+		return np.argmax(scores)
+
 
 	def train(self,train_set,train_label):
 		""" Train perceptron model (self.w) with training dataset.
@@ -28,24 +43,31 @@ class MultiClassPerceptron(object):
 		    train_set(numpy.ndarray): training examples with a dimension of (# of examples, feature_dim)
 		    train_label(numpy.ndarray): training labels with a dimension of (# of examples, )
 		"""
-		num_class = self.w.shape[1]
-		feature_dim = self.w.shape[0]-1
-		for i in range(len(train_label)):
-			train_feature = train_set[i]
-			class_probs = np.zeros((num_class))
-			for c in range(num_class):
-				tempArr = self.w[:feature_dim,c]
-				class_probs[c] = np.dot(tempArr, train_feature) + self.w[feature_dim, c]
-			estimate = 0
-			for c in range(1,num_class):
-				if class_probs[c] > class_probs[estimate]:
-					estimate = c
-			actual = train_label[i]
-			if estimate != actual:
-				self.w[:feature_dim, actual] += train_feature
-				self.w[feature_dim, actual] += 1
-				self.w[:feature_dim, actual] -= train_feature
-				self.w[feature_dim, actual] -= 1
+
+		# YOUR CODE HERE
+		# print(np.amax(train_label))
+		# print(np.amin(train_label))
+		total_epochs = 4
+		epochs_passed = 0
+
+		while epochs_passed < total_epochs:
+			for train_idx in range(train_set.shape[0]):
+				# feat_aug = extend_array(train_set[train_idx], 1)
+				feats = train_set[train_idx]
+				predicted_class = self.classify(feats)
+				actual_class = train_label[train_idx]
+
+				if actual_class != predicted_class:
+					learn_rate = 1 / (train_idx + 1)
+					feat_update = extend_array(feats, 0)
+					self.w[:, actual_class] += learn_rate * feat_update
+					self.w[:, predicted_class] -= learn_rate * feat_update
+
+			epochs_passed += 1
+
+		# print(self.w)
+		# self.save_model("epoch4")
+
 
 	def test(self,test_set,test_label):
 		""" Test the trained perceptron model (self.w) using testing dataset.
@@ -60,11 +82,23 @@ class MultiClassPerceptron(object):
 			accuracy(float): average accuracy value
 			pred_label(numpy.ndarray): predicted labels with a dimension of (# of examples, )
 		"""
-		accurate_count = 0
-		# for i in range(len(test_set)):
 
-		accuracy = accurate_count / len(test_set)
+		# YOUR CODE HERE
+		accuracy = 0
 		pred_label = np.zeros((len(test_set)))
+
+		for pred_idx in range(test_set.shape[0]):
+
+			feats = test_set[pred_idx]
+			predicted_class = self.classify(feats)
+			pred_label[pred_idx] = predicted_class
+
+			if predicted_class == test_label[pred_idx]:
+				accuracy += 1
+
+		accuracy /= test_set.shape[0]
+
+		print(accuracy)
 
 		return accuracy, pred_label
 
