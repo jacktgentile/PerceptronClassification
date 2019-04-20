@@ -104,7 +104,6 @@ def relu_backward(dA, cache):
 
     return dZ
 
-# TODO: replace naive python loops with numpy multiplication
 def cross_entropy(F, y):
     n = F.shape[0]
     C = F.shape[1]
