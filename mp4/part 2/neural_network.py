@@ -67,7 +67,6 @@ def four_nn():
     Hint: Utilize numpy as much as possible for max efficiency.
         This is a great time to review on your linear algebra as well.
 """
-# TODO: replace naive python loops with numpy multiplication
 def affine_forward(A, W, b):
     z_rows = A.shape[0]
     z_cols = W.shape[1]
@@ -79,7 +78,6 @@ def affine_forward(A, W, b):
     cache = [A, W]
     return Z, cache
 
-# TODO: replace naive python loops with numpy multiplication
 def affine_backward(dZ, cache):
     A = cache[0]
     W = cache[1]
@@ -88,16 +86,8 @@ def affine_backward(dZ, cache):
     dW = np.zeros(W.shape)
     db = np.zeros((W.shape[1]))
 
-    n = A.shape[0]
-    d_prime = W.shape[1]
-
-    # Computing dA
     dA = dZ @ W.T
-
-    # Computing dW
     dW = A.T @ dZ
-
-    # Computing db
     dB = np.sum(dZ, axis=0)
 
     return dA, dW, dB
@@ -122,30 +112,20 @@ def cross_entropy(F, y):
     # Computing loss
     loss = 0
     for i in range(n):
-        loss += F[i][int(y[i])]
-
-        loss_sum = 0
-        for k in range(C):
-            loss_sum += np.exp(F[i][k])
-        loss -= np.log(loss_sum)
+        loss_sum = np.exp(F[i]).sum()
+        loss += F[i][int(y[i])] - np.log(loss_sum)
 
     loss *= -(1/n)
 
     # Computing dF
-    dF = np.zeros(F.shape)
+    binary = np.zeros(F.shape)
     for i in range(F.shape[0]):
         for j in range(F.shape[1]):
-            dF_ij = 0
-
             if j == y[i]:
-                dF_ij += 1
+                binary[i][j] = 1
 
-            dF_sum = 0
-            for k in range(C):
-                dF_sum += np.exp(F[i][k])
-
-            dF_ij -= np.exp(F[i][j]) / dF_sum
-            dF_ij *= -(1/n)
-            dF[i][j] = dF_ij
+    boardcasted = np.zeros(F.shape) + np.sum(np.exp(F), axis=1).reshape((F.shape[0], 1))
+    dF = binary - np.exp(F) / boardcasted
+    dF *= -(1/n)
 
     return loss, dF
