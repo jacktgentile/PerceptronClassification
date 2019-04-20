@@ -74,12 +74,7 @@ def affine_forward(A, W, b):
     Z = np.zeros((z_rows, z_cols))
     d = W.shape[0]
 
-    for i in range(z_rows):
-        for j in range(z_cols):
-            z_ij = 0
-            for k in range(d):
-                z_ij += A[i][k] * W[k][j]
-            Z[i][j] = z_ij + b[j]
+    Z = A @ W + b
 
     cache = [A, W]
     return Z, cache
@@ -97,29 +92,15 @@ def affine_backward(dZ, cache):
     d_prime = W.shape[1]
 
     # Computing dA
-    for i in range(dA.shape[0]):
-        for k in range(dA.shape[1]):
-            dA_ik = 0
-            for j in range(d_prime):
-                dA_ik += dZ[i][j] * W[k][j]
-            dA[i][k] = dA_ik
+    dA = dZ @ W.T
 
     # Computing dW
-    for k in range(dW.shape[0]):
-        for j in range(dW.shape[1]):
-            dW_kj = 0
-            for i in range(n):
-                dW_kj += A[i][k] * dZ[i][j]
-            dW[k][j] = dW_kj
+    dW = A.T @ dZ
 
     # Computing db
-    for j in range(db.shape[0]):
-        db_j = 0
-        for i in range(n):
-            db_j += dZ[i][j]
-        db[j] = db_j
+    dB = np.sum(dZ, axis=0)
 
-    return dA, dW, db
+    return dA, dW, dB
 
 def relu_forward(Z):
     A = np.maximum(Z, 0)
