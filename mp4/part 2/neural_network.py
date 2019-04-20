@@ -141,7 +141,7 @@ def cross_entropy(F, y):
     # Computing loss
     loss = 0
     for i in range(n):
-        loss += F[i][y[i]]
+        loss += F[i][int(y[i])]
 
         loss_sum = 0
         for k in range(C):
