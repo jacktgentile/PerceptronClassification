@@ -100,13 +100,6 @@ class TestNeuralNetwork(unittest.TestCase):
 
             test_A, cache = relu_forward(Z)
             test_dZ = relu_backward(dA, cache)
-
-            print("A eh?")
-            print(A)
-
-            print("test_A eh?")
-            print(test_A)
-
             npt.assert_allclose(A, test_A)
             npt.assert_allclose(dZ, test_dZ)
 

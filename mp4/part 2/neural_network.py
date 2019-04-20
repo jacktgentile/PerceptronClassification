@@ -78,8 +78,8 @@ def affine_forward(A, W, b):
         for j in range(z_cols):
             z_ij = 0
             for k in range(d):
-                z_ij += A[i][k] * W[k][j] + b[j]
-            Z[i][j] = z_ij
+                z_ij += A[i][k] * W[k][j]
+            Z[i][j] = z_ij + b[j]
 
     cache = [A, W]
     return Z, cache
