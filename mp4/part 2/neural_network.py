@@ -24,7 +24,34 @@ eta = 0.1
 """
 def minibatch_gd(epoch, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, num_classes, shuffle=True):
 
-    #IMPLEMENT HERE
+    # Batch size and number of examples
+    n = 200
+    N = x_train.shape[0]
+    Ws = [w1, w2, w3, w4]
+    bs = [b1, b2, b3, b4]
+    losses = []
+
+    for e in range(epoch):
+        if shuffle:
+            temp = np.concatenate((y_train.T, x_train), axis=1)
+            np.random.shuffle(temp)
+
+            y_train = temp[:, 0]
+            x_train = temp[:, 1:]
+
+        total_loss = 0
+        for i in range(N // n):
+            start_idx = i * n
+            end_idx = min((i + 1) * n, N)
+
+            x_batch = x_train[start_idx:end_idx]
+            y_batch = y_train[start_idx:end_idx]
+            total_loss += four_nn(x_batch, Ws, bs, y_batch, test=False)
+
+        losses.append(total_loss)
+
+    print("Hey doodoo dunderhead, check out these losses")
+    print(losses)
 
     return w1, w2, w3, w4, b1, b2, b3, b4, losses
 
@@ -65,8 +92,9 @@ def four_nn(X, Ws, bs, y, test):
     A3, rcache3 = relu_forward(Z3)
     F, acache4 = affine_forward(A2, Ws[3], bs[3])
 
-    if test == true:
-        pass
+    if test:
+        classification = np.argmax(F, axis=1)
+        return classification
 
     loss, dF = cross_entropy(F, y)
     dA3, dW4, db4 = affine_backward(dF, acache4)
