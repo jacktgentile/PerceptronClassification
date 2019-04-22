@@ -24,34 +24,38 @@ eta = 0.1
 """
 def minibatch_gd(epoch, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, num_classes, shuffle=True):
 
-    # Batch size and number of examples
+    # Batch size, number of examples, and parameter restructuring
     n = 200
     N = x_train.shape[0]
     Ws = [w1, w2, w3, w4]
     bs = [b1, b2, b3, b4]
     losses = []
 
+    # Iterating through our epochs
     for e in range(epoch):
+
+        # Shuffling our data if necessary
+        y_train_shuff = y_train
+        x_train_shuff = x_train
         if shuffle:
-            temp = np.concatenate((y_train.T, x_train), axis=1)
+            y_train_temp = y_train.reshape((1, y_train.shape[0]))
+            temp = np.concatenate((y_train_temp.T, x_train), axis=1)
             np.random.shuffle(temp)
 
-            y_train = temp[:, 0]
-            x_train = temp[:, 1:]
+            y_train_shuff = temp[:, 0]
+            x_train_shuff = temp[:, 1:]
 
+        # Splitting our data up into batches
         total_loss = 0
         for i in range(N // n):
             start_idx = i * n
             end_idx = min((i + 1) * n, N)
 
-            x_batch = x_train[start_idx:end_idx]
-            y_batch = y_train[start_idx:end_idx]
+            x_batch = x_train_shuff[start_idx:end_idx]
+            y_batch = y_train_shuff[start_idx:end_idx]
             total_loss += four_nn(x_batch, Ws, bs, y_batch, test=False)
 
         losses.append(total_loss)
-
-    print("Hey doodoo dunderhead, check out these losses")
-    print(losses)
 
     return w1, w2, w3, w4, b1, b2, b3, b4, losses
 
@@ -73,7 +77,13 @@ def minibatch_gd(epoch, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, num_cl
 """
 def test_nn(w1, w2, w3, w4, b1, b2, b3, b4, x_test, y_test, num_classes):
 
-    avg_class_rate = 0.0
+    Ws = [w1, w2, w3, w4]
+    bs = [b1, b2, b3, b4]
+    classifications = four_nn(x_test, Ws, bs, None, test=True)
+
+    correct_class = np.where(classifications == y_test, 1, 0)
+
+    avg_class_rate = np.sum(correct_class) / x_test.shape[0]
     class_rate_per_class = [0.0] * num_classes
     return avg_class_rate, class_rate_per_class
 
@@ -90,7 +100,7 @@ def four_nn(X, Ws, bs, y, test):
     A2, rcache2 = relu_forward(Z2)
     Z3, acache3 = affine_forward(A2, Ws[2], bs[2])
     A3, rcache3 = relu_forward(Z3)
-    F, acache4 = affine_forward(A2, Ws[3], bs[3])
+    F, acache4 = affine_forward(A3, Ws[3], bs[3])
 
     if test:
         classification = np.argmax(F, axis=1)
@@ -104,7 +114,17 @@ def four_nn(X, Ws, bs, y, test):
     dA1, dW2, db2 = affine_backward(dZ2, acache2)
     dZ1 = relu_backward(dA1, rcache1)
     dX, dW1, db1 = affine_backward(dZ1, acache1)
+
+    # Update parameters
     Ws[0] -= eta * dW1
+    Ws[1] -= eta * dW2
+    Ws[2] -= eta * dW3
+    Ws[3] -= eta * dW4
+
+    bs[0] -= eta * db1
+    bs[1] -= eta * db2
+    bs[2] -= eta * db3
+    bs[3] -= eta * db4
 
     return loss
 
