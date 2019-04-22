@@ -66,8 +66,8 @@ class Agent:
         food_y = state[4]
 
         # Checking adjoining walls
-        adjoining_wall_x = self.map_idx(snake_head_x, SEGMENT_SIZE, BOARD_SIZE * SEGMENT_SIZE)
-        adjoining_wall_y = self.map_idx(snake_head_y, SEGMENT_SIZE, BOARD_SIZE * SEGMENT_SIZE)
+        adjoining_wall_x = map_idx(snake_head_x, SEGMENT_SIZE, BOARD_SIZE * SEGMENT_SIZE)
+        adjoining_wall_y = map_idx(snake_head_y, SEGMENT_SIZE, BOARD_SIZE * SEGMENT_SIZE)
 
         # Checking food direction
         food_dir_x = map_range_idx(food_x, snake_head_x)
@@ -90,7 +90,7 @@ class Agent:
             elif snake_head_y == body_y:
                 if body_x == snake_head_x - SEGMENT_SIZE:
                     adjoining_body_left = 1
-                elif body_x = snake_head_x + SEGMENT_SIZE:
+                elif body_x == snake_head_x + SEGMENT_SIZE:
                     adjoining_body_right = 1
 
         # Concatenating all values and returning tuple
@@ -100,10 +100,10 @@ class Agent:
         return new_state
 
     # Access and modification functions for our Q table
-    def Q(self, s, a):
+    def fQ(self, s, a):
         return self.Q[s[0]][s[1]][s[2]][s[3]][s[4]][s[5]][s[6]][s[7]][a]
 
-    def update_Q(self, state, a, new_q):
+    def update_Q(self, s, a, new_q):
         self.Q[s[0]][s[1]][s[2]][s[3]][s[4]][s[5]][s[6]][s[7]][a] = new_q
 
     # Returns best action and corresponding q value in current state
@@ -111,7 +111,7 @@ class Agent:
         max_a = 0
         max_q = -math.inf
         for i in range(len(self.actions)):
-            curr_q = self.Q(s, self.actions[i])
+            curr_q = self.fQ(s, self.actions[i])
 
             if curr_q >= max_q:
                 max_q = curr_q
@@ -120,15 +120,15 @@ class Agent:
         return max_a, max_q
 
     # Access and modification functions for our N function
-    def N(self, s, a):
+    def fN(self, s, a):
         return self.N[s[0]][s[1]][s[2]][s[3]][s[4]][s[5]][s[6]][s[7]][a]
 
-    def increment_N(self, state, a):
+    def increment_N(self, s, a):
         self.N[s[0]][s[1]][s[2]][s[3]][s[4]][s[5]][s[6]][s[7]][a] += 1
 
     # Alpha value in update Q function
-    def get_alpha():
-        return self.C / (self.C + self.N(self.s, self.a))
+    def get_alpha(self):
+        return self.C / (self.C + self.fN(self.s, self.a))
 
     # Our rewards function
     def R(self, s, points, dead):
@@ -139,13 +139,13 @@ class Agent:
         else:
             return -0.1
 
-    def R_plus():
+    def R_plus(self):
         return 1
 
     # Our exploration function
     def f(self, u, n):
         if n < self.Ne:
-            return R_plus()
+            return self.R_plus()
         else:
             return u
 
@@ -164,15 +164,20 @@ class Agent:
 
         '''
 
+        curr_state = self.convert_state(state)
+
         if self._train:
 
-            if self.s != None and self.a != None
+            if self.s != None and self.a != None:
                 # Updating our Q value
-                alpha = get_alpha()
+                alpha = self.get_alpha()
                 R_s = self.R(self.s, points, dead)
-                max_curr_q, max_curr_a = self.best_move(state)
-                new_q = (1 - alpha) * self.Q(self.s, self.a) + alpha * (R_s + self.gamma * max_curr_q)
-                update_Q(self.s, self.a, new_q)
+                max_curr_q, max_curr_a = self.best_move(curr_state)
+                new_q = (1 - alpha) * self.fQ(self.s, self.a) + alpha * (R_s + self.gamma * max_curr_q)
+                self.update_Q(self.s, self.a, new_q)
+
+                if not dead:
+                    self.increment_N(self.s, self.a)
 
             if dead:
                 self.reset()
@@ -183,18 +188,18 @@ class Agent:
                 max_f = -math.inf
                 for i in range(len(self.actions)):
                     curr_a = self.actions[i]
-                    curr_f = self.f(self.Q(state, a), self.N(state, curr_a))
+                    curr_f = self.f(self.fQ(curr_state, curr_a), self.fN(curr_state, curr_a))
 
                     if curr_f >= max_f:
                         max_f = curr_f
                         max_a = curr_a
 
                 # Updating variables to keep track of last iter data
-                self.s = state
+                self.s = curr_state
                 self.points = points
                 self.a = max_a
 
         else:
-            max_a = self.best_move(state)
+            max_a = self.best_move(curr_state)
 
         return max_a
