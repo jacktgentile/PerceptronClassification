@@ -24,7 +24,6 @@ def map_range_idx(val, decision):
     else:
         return 0
 
-
 class Agent:
 
     def __init__(self, actions, Ne, C, gamma):
@@ -163,30 +162,28 @@ class Agent:
         (Note that [adjoining_wall_x=0, adjoining_wall_y=0] is also the case when snake runs out of the 480x480 board)
 
         '''
-        # print(state[0] // SEGMENT_SIZE, state[1] // SEGMENT_SIZE)
         curr_state = self.convert_state(state)
 
         if self._train:
 
             if self.s != None and self.a != None:
+
                 # Updating our Q value
                 alpha = self.get_alpha()
                 R_s = self.R(self.s, points, dead)
                 max_curr_a, max_curr_q  = self.best_move(curr_state)
-                new_q = (1 - alpha) * self.fQ(self.s, self.a) + alpha * (R_s + self.gamma * max_curr_q)
+                new_q = ((1 - alpha) * self.fQ(self.s, self.a)) + (alpha * (R_s + self.gamma * max_curr_q))
                 self.update_Q(self.s, self.a, new_q)
 
-                # print("updating at coor", state[0] // SEGMENT_SIZE, state[1] // SEGMENT_SIZE, "with q: ", new_q)
-
-                if not dead:
-                    self.increment_N(self.s, self.a)
+                # Updating state-action pair count
+                self.increment_N(self.s, self.a)
 
             if dead:
                 self.reset()
                 return
             else:
                 # Calculating argmax of exploration policy
-                max_a = 0
+                max_a = self.actions[0]
                 max_f = -math.inf
                 for i in range(len(self.actions)):
                     curr_a = self.actions[i]
