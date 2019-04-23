@@ -52,7 +52,7 @@ def test(net, testLoader):
             # elements. )
 
             # @Jack You can ignore this line if you want, but will get you total correct
-            # good for average classification rate)
+            # (good for average classification rate).
             correct += pred.eq(target.view_as(pred)).sum().item()
 
         # TODO @Jack: Find the average classification rate per class (from the Confusion matrix)
