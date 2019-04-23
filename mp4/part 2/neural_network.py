@@ -1,4 +1,7 @@
 import numpy as np
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+from sklearn.utils.multiclass import unique_labels
 
 eta = 0.1
 """
@@ -24,36 +27,89 @@ eta = 0.1
 """
 def minibatch_gd(epoch, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, num_classes, shuffle=True):
 
-    # Batch size and number of examples
+    # Batch size, number of examples, and parameter restructuring
     n = 200
     N = x_train.shape[0]
     Ws = [w1, w2, w3, w4]
     bs = [b1, b2, b3, b4]
     losses = []
 
+    # Iterating through our epochs
     for e in range(epoch):
+
+        # Shuffling our data if necessary
+        y_train_shuff = y_train
+        x_train_shuff = x_train
         if shuffle:
-            temp = np.concatenate((y_train.T, x_train), axis=1)
+            y_train_temp = y_train.reshape((1, y_train.shape[0]))
+            temp = np.concatenate((y_train_temp.T, x_train), axis=1)
             np.random.shuffle(temp)
 
-            y_train = temp[:, 0]
-            x_train = temp[:, 1:]
+            y_train_shuff = temp[:, 0]
+            x_train_shuff = temp[:, 1:]
 
+        # Splitting our data up into batches
         total_loss = 0
         for i in range(N // n):
             start_idx = i * n
             end_idx = min((i + 1) * n, N)
 
-            x_batch = x_train[start_idx:end_idx]
-            y_batch = y_train[start_idx:end_idx]
+            x_batch = x_train_shuff[start_idx:end_idx]
+            y_batch = y_train_shuff[start_idx:end_idx]
             total_loss += four_nn(x_batch, Ws, bs, y_batch, test=False)
 
         losses.append(total_loss)
 
-    print("Hey doodoo dunderhead, check out these losses")
-    print(losses)
-
     return w1, w2, w3, w4, b1, b2, b3, b4, losses
+
+# Modified implementation from MP3
+def plot_confusion_matrix(y_true, y_pred, cm,
+                          normalize=False,
+                          title=None,
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    if not title:
+        if normalize:
+            title = 'Normalized confusion matrix'
+        else:
+            title = 'Confusion matrix, without normalization'
+
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(cm)
+
+    fig, ax = plt.subplots()
+    im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
+    ax.figure.colorbar(im, ax=ax)
+    # We want to show all ticks...
+    ax.set(xticks=np.arange(cm.shape[1]),
+           yticks=np.arange(cm.shape[0]),
+           title=title,
+           ylabel='True label',
+           xlabel='Predicted label')
+    # Rotate the tick labels and set their alignment.
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+             rotation_mode="anchor")
+
+    # Loop over data dimensions and create text annotations.
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            ax.text(j, i, format(cm[i, j], fmt),
+                    ha="center", va="center",
+                    color="white" if cm[i, j] > thresh else "black")
+    fig.tight_layout()
+
+    return ax
+
 
 """
     Use the trained weights & biases to see how well the nn performs
@@ -72,9 +128,26 @@ def minibatch_gd(epoch, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, num_cl
         The confusion matrix won't be autograded but necessary in report.
 """
 def test_nn(w1, w2, w3, w4, b1, b2, b3, b4, x_test, y_test, num_classes):
+    Ws = [w1, w2, w3, w4]
+    bs = [b1, b2, b3, b4]
+    classifications = four_nn(x_test, Ws, bs, None, test=True)
 
-    avg_class_rate = 0.0
+    avg_class_rate = 0
+    for i in range(y_test.shape[0]):
+        if y_test[i] == classifications[i]:
+            avg_class_rate += 1
+
+    # calculate and display confusion matrix
+    cm = confusion_matrix(y_test, classifications)
+    plot_confusion_matrix(y_test, classifications, cm)
+
+    # fill class_rate_per_class using the confusion matrix
     class_rate_per_class = [0.0] * num_classes
+    for i in range(cm.shape[0]):
+        total = np.sum(cm[i], dtype=np.float32)
+        class_rate_per_class[i] = cm[i][i] / total
+
+    avg_class_rate /= x_test.shape[0]
     return avg_class_rate, class_rate_per_class
 
 """
@@ -90,7 +163,7 @@ def four_nn(X, Ws, bs, y, test):
     A2, rcache2 = relu_forward(Z2)
     Z3, acache3 = affine_forward(A2, Ws[2], bs[2])
     A3, rcache3 = relu_forward(Z3)
-    F, acache4 = affine_forward(A2, Ws[3], bs[3])
+    F, acache4 = affine_forward(A3, Ws[3], bs[3])
 
     if test:
         classification = np.argmax(F, axis=1)
@@ -104,7 +177,17 @@ def four_nn(X, Ws, bs, y, test):
     dA1, dW2, db2 = affine_backward(dZ2, acache2)
     dZ1 = relu_backward(dA1, rcache1)
     dX, dW1, db1 = affine_backward(dZ1, acache1)
+
+    # Update parameters
     Ws[0] -= eta * dW1
+    Ws[1] -= eta * dW2
+    Ws[2] -= eta * dW3
+    Ws[3] -= eta * dW4
+
+    bs[0] -= eta * db1
+    bs[1] -= eta * db2
+    bs[2] -= eta * db3
+    bs[3] -= eta * db4
 
     return loss
 

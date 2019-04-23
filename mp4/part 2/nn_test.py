@@ -150,7 +150,7 @@ class TestNeuralNetwork(unittest.TestCase):
         x_train = data[:3000, :5]
         y_train = data[:3000, 5]
 
-        w1, w2, w3, w4, b1, b2, b3, b4, losses = minibatch_gd(10, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, 3, False)
+        w1, w2, w3, w4, b1, b2, b3, b4, losses = minibatch_gd(10, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, 3, True)
         real_losses = [16.47908832639923, 16.47890904710272, 16.478763562070586, 16.47862850676294, 16.47849924186475, 16.478372234884887, 16.478245914771097, 16.478119929957426, 16.477994155766012, 16.477868479188555]
         npt.assert_allclose(losses, real_losses)
 
