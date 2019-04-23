@@ -76,15 +76,22 @@ def minibatch_gd(epoch, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, num_cl
         The confusion matrix won't be autograded but necessary in report.
 """
 def test_nn(w1, w2, w3, w4, b1, b2, b3, b4, x_test, y_test, num_classes):
-
     Ws = [w1, w2, w3, w4]
     bs = [b1, b2, b3, b4]
     classifications = four_nn(x_test, Ws, bs, None, test=True)
 
-    correct_class = np.where(classifications == y_test, 1, 0)
+    avg_class_rate = 0
+    for i in range(y_test.shape[0]):
+        if y_test[i] == classifications[i]:
+            avg_class_rate += 1
 
-    avg_class_rate = np.sum(correct_class) / x_test.shape[0]
+        # TODO @Jack: implement confusion matrix
+
+
+    # TODO @Jack: fill class_rate_per_class correctly
     class_rate_per_class = [0.0] * num_classes
+
+    avg_class_rate /= x_test.shape[0]
     return avg_class_rate, class_rate_per_class
 
 """
